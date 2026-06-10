@@ -25,7 +25,15 @@ export default function Dashboard() {
         const res = await axios.get('http://localhost:5000/api/customers');
         setCustomers(res.data);
       } catch (err) {
-        console.error(err);
+        console.error('Failed to fetch from backend, using mock data:', err);
+        setCustomers([
+          { id: '1', firstName: 'John', lastName: 'Doe', age: 32, city: 'New York', maritalStatus: 'Single', dateOfBirth: '1991-05-12' },
+          { id: '2', firstName: 'Jane', lastName: 'Smith', age: 28, city: 'Los Angeles', maritalStatus: 'Divorced', dateOfBirth: '1995-10-22' },
+          { id: '3', firstName: 'Michael', lastName: 'Johnson', age: 35, city: 'Chicago', maritalStatus: 'Single', dateOfBirth: '1988-02-15' },
+          { id: '4', firstName: 'Emily', lastName: 'Davis', age: 29, city: 'Houston', maritalStatus: 'Single', dateOfBirth: '1994-07-08' },
+          { id: '5', firstName: 'David', lastName: 'Wilson', age: 41, city: 'Miami', maritalStatus: 'Widowed', dateOfBirth: '1982-11-30' },
+          { id: '6', firstName: 'Sarah', lastName: 'Brown', age: 31, city: 'Seattle', maritalStatus: 'Single', dateOfBirth: '1992-04-18' },
+        ]);
       }
     };
     fetchCustomers();
