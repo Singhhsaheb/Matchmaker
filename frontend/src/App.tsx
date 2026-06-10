@@ -13,7 +13,7 @@ function ProtectedRoute({ children }: { children: ReactElement }) {
 
 function App() {
   return (
-    <Router basename="/TDC-main/">
+    <Router basename="/Matchmaker/">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

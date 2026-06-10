@@ -2,10 +2,10 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://singhhsaheb.github.io/TDC-main/",
+  "homepage": "https://singhhsaheb.github.io/Matchmaker/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Singhhsaheb/TDC-main.git"
+    "url": "https://github.com/Singhhsaheb/Matchmaker.git"
   },
   "type": "module",
   "scripts": {
