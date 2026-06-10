@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Heart, Settings, Sun, Search, Filter, Users, LogOut, ArrowRight, MessageCircle, MapPin } from 'lucide-react';
+import { Heart, Settings, Sun, Search, Filter, Users, LogOut, ArrowRight, MapPin } from 'lucide-react';
 import SettingsSidebar from '../components/SettingsSidebar';
 
 interface Customer {
