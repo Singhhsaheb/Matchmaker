@@ -1,18 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { MessageCircle, X, Send } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import { MessageCircle, X, Bot } from 'lucide-react';
 
 interface Message {
   id: string;
   text: string;
   isBot: boolean;
+  options?: string[];
 }
 
 export default function AIBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: "Hi! I'm your AI Matchmaker assistant. Describe what you're looking for (e.g. 'Find a male from Delhi who is tall').", isBot: true }
+    { id: '1', text: "Hi there! I am your TDC Advisor. I can provide tailored matchmaking advice based on your profile.", isBot: true },
+    { id: '2', text: "To start, please select your gender:", isBot: true, options: ["Male", "Female", "Other"] }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,17 +27,10 @@ export default function AIBot() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const userMessage: Message = { id: Date.now().toString(), text: input, isBot: false };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+  const sendToServer = async (text: string) => {
     setIsLoading(true);
-
     try {
-      const res = await axios.post('http://localhost:5000/api/bot/chat', { message: userMessage.text });
+      const res = await axios.post('http://localhost:5000/api/bot/chat', { message: text });
       const botMessage: Message = { id: (Date.now() + 1).toString(), text: res.data.reply, isBot: true };
       setMessages(prev => [...prev, botMessage]);
     } catch (err) {
@@ -45,97 +39,134 @@ export default function AIBot() {
     setIsLoading(false);
   };
 
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    const userText = input;
+    setMessages(prev => [...prev, { id: Date.now().toString(), text: userText, isBot: false }]);
+    setInput('');
+    await sendToServer(userText);
+  };
+
+  const handleOptionClick = async (option: string) => {
+    setMessages(prev => [...prev, { id: Date.now().toString(), text: option, isBot: false }]);
+    await sendToServer(option);
+  };
+
   return (
     <>
       {/* Chat Bubble Toggle */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="glass-panel"
-        style={{
-          position: 'fixed', bottom: '2rem', right: '2rem',
-          width: '60px', height: '60px', borderRadius: '50%',
-          display: isOpen ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', zIndex: 1000,
-          background: 'linear-gradient(135deg, var(--accent-rose), var(--accent-violet))',
-          boxShadow: '0 8px 32px rgba(225, 29, 72, 0.4)'
-        }}
+        className="fab"
+        style={{ display: isOpen ? 'none' : 'flex' }}
       >
-        <MessageCircle size={30} color="white" />
+        <MessageCircle />
       </button>
 
       {/* Chat Window */}
       {isOpen && (
         <div 
-          className="glass-panel animate-fade-in"
+          className="glass-panel animate-fade-in chat-window"
           style={{
             position: 'fixed', bottom: '2rem', right: '2rem',
-            width: '350px', height: '500px', display: 'flex', flexDirection: 'column',
+            width: '380px', height: '550px', display: 'flex', flexDirection: 'column',
             zIndex: 1000, overflow: 'hidden'
           }}
         >
           {/* Header */}
           <div style={{
-            padding: '1rem', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--glass-border)',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '10px', height: '10px', background: 'var(--accent-gold)', borderRadius: '50%' }}></div>
-              <h3 style={{ fontSize: '1rem', margin: 0 }}>AI Matchmaker</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Bot size={24} color="var(--accent-pink)" />
+              <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>TDC Advisor</h3>
             </div>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              <X size={20} />
+            <button onClick={() => setIsOpen(false)} style={{ background: 'white', border: 'none', color: 'black', cursor: 'pointer', borderRadius: '4px', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <X size={16} />
             </button>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {messages.map(msg => (
-              <div key={msg.id} style={{
-                alignSelf: msg.isBot ? 'flex-start' : 'flex-end',
-                maxWidth: '85%',
-                background: msg.isBot ? 'rgba(255,255,255,0.1)' : 'var(--accent-violet)',
-                padding: '0.75rem 1rem',
-                borderRadius: '12px',
-                borderBottomLeftRadius: msg.isBot ? '0' : '12px',
-                borderBottomRightRadius: !msg.isBot ? '0' : '12px',
-                fontSize: '0.9rem'
-              }}>
-                <ReactMarkdown
-                  components={{
-                    a: ({ node, ...props }) => <a {...props} style={{ color: 'var(--accent-gold)', textDecoration: 'underline' }} />
-                  }}
-                >
-                  {msg.text}
-                </ReactMarkdown>
+              <div key={msg.id} style={{ display: 'flex', gap: '1rem', flexDirection: msg.isBot ? 'row' : 'row-reverse' }}>
+                {msg.isBot && (
+                  <div style={{ flexShrink: 0, paddingTop: '0.2rem' }}>
+                    <Bot size={18} color="var(--accent-pink)" />
+                  </div>
+                )}
+                
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  maxWidth: '85%'
+                }}>
+                  <div style={{
+                    fontSize: '1.05rem',
+                    lineHeight: '1.5',
+                    color: msg.isBot ? 'white' : 'var(--text-main)',
+                    background: msg.isBot ? 'transparent' : 'var(--accent-purple)',
+                    padding: msg.isBot ? '0' : '0.75rem 1rem',
+                    borderRadius: msg.isBot ? '0' : '12px',
+                    borderBottomRightRadius: msg.isBot ? '0' : '2px',
+                  }}>
+                    {msg.text}
+                  </div>
+                  
+                  {msg.options && (
+                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                      {msg.options.map(opt => (
+                        <button 
+                          key={opt}
+                          onClick={() => handleOptionClick(opt)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            padding: 0
+                          }}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
+            
             {isLoading && (
-              <div style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.1)', padding: '0.75rem 1rem', borderRadius: '12px', borderBottomLeftRadius: 0, fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
-                Thinking...
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flexShrink: 0, paddingTop: '0.2rem' }}>
+                  <Bot size={18} color="var(--accent-pink)" />
+                </div>
+                <div style={{ fontSize: '1rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
+                  Typing...
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
+          {/* Input Area (Hidden when expecting option selection, but kept for normal chat) */}
           <form onSubmit={handleSend} style={{
-            padding: '1rem', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid var(--glass-border)',
-            display: 'flex', gap: '0.5rem'
+            padding: '1rem', background: 'rgba(0,0,0,0.2)',
+            display: 'flex', gap: '0.5rem', margin: '1rem', borderRadius: '12px'
           }}>
             <input 
               value={input} onChange={e => setInput(e.target.value)}
-              placeholder="Ask me anything..."
+              placeholder="Type a message..."
               style={{
-                flex: 1, padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--glass-border)',
-                background: 'rgba(255,255,255,0.05)', color: 'white', outline: 'none'
+                flex: 1, padding: '0.5rem', background: 'transparent', border: 'none',
+                color: 'white', outline: 'none', fontSize: '1rem'
               }}
             />
-            <button type="submit" style={{
-              background: 'var(--accent-rose)', border: 'none', borderRadius: '8px', padding: '0 1rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white'
-            }}>
-              <Send size={18} />
-            </button>
           </form>
         </div>
       )}
